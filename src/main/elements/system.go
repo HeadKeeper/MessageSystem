@@ -1,43 +1,46 @@
 package elements
 
+import "fmt"
+
 type System struct {
-	systemElements []Executable
+	SystemElements []Executable
 	CurrentState string
-	currentStates map[string]int
+	CurrentStates map[string]int
 }
 
-func (system System) AddElement(element *Executable) {
-	system.systemElements = append(system.systemElements, element)
+func (system *System) AddElement(element Executable) {
+	system.SystemElements = append(system.SystemElements, element)
 }
 
-func (system System) executeForeachAtLast() {
-	index := len(system.systemElements)
-	for i := index; i > 0; i-- {
-		system.systemElements[i].Execute()
+func (system *System) executeForeachAtLast() {
+	index := len(system.SystemElements) - 1
+	for i := index; i >= 0; i-- {
+		system.SystemElements[i].Execute()
 	}
 }
 
-func (system System) saveCurrentState() {
+func (system *System) saveCurrentState() {
 	var resultState string
-	for _, element := range system.systemElements {
+	for _, element := range system.SystemElements {
 		resultState += element.GetElementState()
 	}
 	system.CurrentState = resultState
+	fmt.Println("State: " + resultState)
 	// if state exist ...
-	if value, key := system.currentStates[resultState]; key {
+	if value, key := system.CurrentStates[resultState]; key {
 		value++
 	} else {
 		value = 1;
 	}
 }
 
-func (system System) getStatics() {
+func (system *System) getStatics() {
 	// ADD
 }
 
-func (system System) SystemTact() {
-	system.executeForeachAtLast()
+func (system *System) SystemTact() {
 	system.saveCurrentState()
+	system.executeForeachAtLast()
 }
 
 // TODO: ADD SYSTEM STATISTICS STRUCT

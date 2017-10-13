@@ -1,6 +1,6 @@
 package elements
 
 type ForkNode struct {
-	FirstFork *Executable
-	SecondFork *Executable
+	FirstFork Executable
+	SecondFork Executable
 }
