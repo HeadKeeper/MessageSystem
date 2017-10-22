@@ -3,19 +3,31 @@ package elements
 import (
 	"math/rand"
 	"strconv"
+	"fmt"
 )
 
 // STANDARD HANDLER
 type Handler struct {
 	StayProbability float64
-	IsHandling bool
+	IsHandling      bool
+	HandledMessages int
+	ParentSystem    *System
+	HandledMessage	Message
 }
 
 func (handler *Handler) Execute() {
 	if handler.IsHandling {
 		randomValue := rand.Float64()
-		if randomValue > handler.StayProbability {
+		fmt.Printf("HAND: %f\n",randomValue)
+		if randomValue >= handler.StayProbability {
 			handler.IsHandling = false
+			/*if handler.ParentSystem.LastHandledMessageIndex == -1 {
+				handler.ParentSystem.LastHandledMessageIndex = handler.ParentSystem.getLastNonHandledMessageIndex()
+			}
+			handler.ParentSystem.Messages[handler.ParentSystem.LastHandledMessageIndex].endTact = handler.ParentSystem.GetCurrentTact()*/
+			handler.HandledMessage.endTact = handler.ParentSystem.GetCurrentTact()
+			handler.ParentSystem.HandledMessages = append(handler.ParentSystem.HandledMessages, handler.HandledMessage)
+			handler.HandledMessages++
 		}
 	}
 }
@@ -25,6 +37,7 @@ func (handler *Handler) CanAcceptMessage() bool {
 }
 
 func (handler *Handler) AcceptMessage() {
+	handler.HandledMessage = handler.ParentSystem.getLastUnhandledMessage()
 	handler.IsHandling = true
 }
 
@@ -38,22 +51,36 @@ func (handler *Handler) GetElementState() string {
 	return strconv.Itoa(state)
 }
 
+func (handler *Handler) GetStatistics() string {
+	result := float64(handler.HandledMessages) / 100000
+	fmt.Printf("A = %f\n", result)
+	//fmt.Printf("LAMBDA = %f", 0.5 * result)
+	return "\n"
+}
+
 // HANDLER WITH 'BREAK MESSAGE IF NEXT IS HANDLING' BEHAVIOUR
 type BreakHandler struct {
-	StayProbability float64
-	IsHandling bool
-	NextElement Executable
+	StayProbability     float64
+	IsHandling          bool
+	NextElement         Executable
 	BreakedMessageCount int
+	ParentSystem        *System
+	HandledMessage		Message
 }
 
 func (handler *BreakHandler) Execute() {
 	if handler.IsHandling {
 		randomValue := rand.Float64()
-		if randomValue > handler.StayProbability {
+		fmt.Println(randomValue)
+		if randomValue >= handler.StayProbability {
 			handler.IsHandling = false
 			if handler.NextElement.CanAcceptMessage() {
+				handler.ParentSystem.returnUnhandledMessage(handler.HandledMessage)
 				handler.NextElement.AcceptMessage()
 			} else {
+				//handler.ParentSystem.Messages[handler.ParentSystem.getLastNonHandledMessageIndex()].endTact = handler.ParentSystem.GetCurrentTact()
+				handler.HandledMessage.endTact = handler.ParentSystem.GetCurrentTact()
+				handler.ParentSystem.HandledMessages = append(handler.ParentSystem.HandledMessages, handler.HandledMessage)
 				handler.BreakedMessageCount++
 			}
 		}
@@ -65,6 +92,7 @@ func (handler *BreakHandler) CanAcceptMessage() bool {
 }
 
 func (handler *BreakHandler) AcceptMessage() {
+	handler.HandledMessage = handler.ParentSystem.getLastUnhandledMessage()
 	handler.IsHandling = true
 }
 
@@ -76,6 +104,10 @@ func (handler *BreakHandler) GetElementState() string {
 		state = 0
 	}
 	return strconv.Itoa(state)
+}
+
+func (handler *BreakHandler) GetStatistics() string {
+	return "\n"
 }
 
 // HANDLER WITH 'LOCK MESSAGE IF NEXT IS HANDLING' BEHAVIOUR

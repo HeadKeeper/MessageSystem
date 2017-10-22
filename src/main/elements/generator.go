@@ -2,13 +2,17 @@ package elements
 
 import (
 	"strconv"
-	"fmt"
+)
+
+const (
+	TACTS_TO_NEW_MESSAGE = 2
 )
 
 type Generator struct {
 	TactsToNewMessage int
-	IsBlocked bool
-	NextElement Executable
+	IsBlocked         bool
+	NextElement       Executable
+	ParentSystem      *System
 }
 
 func (generator *Generator) Execute() {
@@ -19,6 +23,10 @@ func (generator *Generator) Execute() {
 		if generator.TactsToNewMessage == 0 {
 			if generator.NextElement.CanAcceptMessage() {
 				generator.resetGenerator()
+				generator.ParentSystem.UnhandledMessages = append(generator.ParentSystem.UnhandledMessages, Message{
+					generator.ParentSystem.GetCurrentTact(),
+					0,
+				})
 				generator.NextElement.AcceptMessage() // SEND MESSAGE
 			} else {
 				generator.lockGenerator()
@@ -26,12 +34,22 @@ func (generator *Generator) Execute() {
 			}
 		} else {
 			if generator.NextElement.CanAcceptMessage() {
-				// NOOP?
+				// NOOP
+				return
 			}
 		}
 	} else if generator.NextElement.CanAcceptMessage() {
 		generator.resetGenerator()
+		generator.ParentSystem.UnhandledMessages = append(generator.ParentSystem.UnhandledMessages, Message{
+			generator.ParentSystem.GetCurrentTact(),
+			0,
+		})
+		generator.NextElement.AcceptMessage()
 	}
+}
+
+func (generator *Generator) GetStatistics() string {
+	return "\n"
 }
 
 func (generator *Generator) GetElementState() string {
@@ -48,12 +66,11 @@ func (generator *Generator) AcceptMessage() {
 }
 
 func (generator *Generator) lockGenerator() {
-	fmt.Println("LOCK!!!")
 	generator.IsBlocked = true
 }
 
 func (generator *Generator) resetGenerator() {
-	generator.TactsToNewMessage = 2
+	generator.TactsToNewMessage = TACTS_TO_NEW_MESSAGE
 	generator.IsBlocked = false
 }
 

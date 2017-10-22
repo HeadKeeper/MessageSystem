@@ -2,6 +2,7 @@ package elements
 
 type Executable interface {
 	Execute()
+	GetStatistics() string
 	Stateble
 	MessageAcceptable
 }
