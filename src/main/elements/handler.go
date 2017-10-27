@@ -21,10 +21,6 @@ func (handler *Handler) Execute() {
 		fmt.Printf("HAND: %f\n",randomValue)
 		if randomValue >= handler.StayProbability {
 			handler.IsHandling = false
-			/*if handler.ParentSystem.LastHandledMessageIndex == -1 {
-				handler.ParentSystem.LastHandledMessageIndex = handler.ParentSystem.getLastNonHandledMessageIndex()
-			}
-			handler.ParentSystem.Messages[handler.ParentSystem.LastHandledMessageIndex].endTact = handler.ParentSystem.GetCurrentTact()*/
 			handler.HandledMessage.endTact = handler.ParentSystem.GetCurrentTact()
 			handler.ParentSystem.HandledMessages = append(handler.ParentSystem.HandledMessages, handler.HandledMessage)
 			handler.HandledMessages++
@@ -52,9 +48,8 @@ func (handler *Handler) GetElementState() string {
 }
 
 func (handler *Handler) GetStatistics() string {
-	result := float64(handler.HandledMessages) / 100000
+	result := float64(handler.HandledMessages) / TACTS_COUNT
 	fmt.Printf("A = %f\n", result)
-	//fmt.Printf("LAMBDA = %f", 0.5 * result)
 	return "\n"
 }
 
@@ -78,9 +73,6 @@ func (handler *BreakHandler) Execute() {
 				handler.ParentSystem.returnUnhandledMessage(handler.HandledMessage)
 				handler.NextElement.AcceptMessage()
 			} else {
-				//handler.ParentSystem.Messages[handler.ParentSystem.getLastNonHandledMessageIndex()].endTact = handler.ParentSystem.GetCurrentTact()
-				handler.HandledMessage.endTact = handler.ParentSystem.GetCurrentTact()
-				handler.ParentSystem.HandledMessages = append(handler.ParentSystem.HandledMessages, handler.HandledMessage)
 				handler.BreakedMessageCount++
 			}
 		}

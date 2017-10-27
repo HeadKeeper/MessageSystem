@@ -4,14 +4,16 @@ import (
 	"fmt"
 )
 
+const(
+	TACTS_COUNT = 100000
+)
+
 type System struct {
 	SystemElements []Executable
 	CurrentState string
 	CurrentStates map[string]int
 	UnhandledMessages []Message
 	HandledMessages []Message
-	LastHandledMessageIndex int // DEPRECATED
-	LastBreakedMessageIndex int // DEPRECATED
 	currentTact int
 }
 
@@ -23,7 +25,6 @@ func (system *System) AddElement(element Executable) {
 /* INITIAL METHOD */
 func (system *System) Init() {
 	system.CurrentStates = make(map[string]int)
-	system.LastBreakedMessageIndex = 1
 }
 
 /* EXECUTE ALL SYSTEM ELEMENTS AT LAST */
@@ -67,27 +68,15 @@ func (system *System) saveCurrentState() {
 	}
 }
 
-/*
-* RETURN -1 IF ALL MESSAGES HANDLED
-* DEPRECATED
-*/
-func (system *System) getLastNonHandledMessageIndex() int {
-	/*for i := system.LastHandledMessageIndex + 1; i < len(system.Messages); i++ {
-		if system.Messages[i].endTact == 0 {
-			return i
-		}
-	}
-	if (len(system.Messages) - 1) == 0 {
-		return 0
-	}*/
-	return -1;
-}
-
 func (system *System) GetStatics() {
+	var sumTimeInSystem int
 	for key, element := range system.CurrentStates {
-		fmt.Printf("%s : %f\n", key, float64(float64(element) / 100000))
+		fmt.Printf("%s : %f\n", key, float64(float64(element) / TACTS_COUNT))
 	}
-	// ADD
+	for _, element := range system.HandledMessages {
+		sumTimeInSystem += element.GetMessageInSystemTime()
+	}
+	fmt.Printf("Wc = %f\n", system.getTimeInSystem(sumTimeInSystem))
 }
 
 /*	RETURN CURRENT SYSTEM TACT */
@@ -102,4 +91,6 @@ func (system *System) SystemTact() {
 	system.executeForeachAtLast()
 }
 
-// TODO: ADD SYSTEM STATISTICS STRUCT
+func (system *System) getTimeInSystem(sumTimeInSystem int) float64 {
+	return float64(sumTimeInSystem) / float64(len(system.HandledMessages))
+}
